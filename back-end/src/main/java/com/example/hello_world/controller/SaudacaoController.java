@@ -12,7 +12,7 @@ public class SaudacaoController {
 
     @GetMapping()
     public String getSaudacao() {
-        return "Hello, World!";
+        return "Hello World!";
     }
 
 
