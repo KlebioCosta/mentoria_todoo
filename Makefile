@@ -5,7 +5,7 @@ GREEN = \033[0;32m
 YELLOW = \033[0;33m
 NC = \033[0m # No Color
 
-.PHONY: help dev docker-* clean test-*
+.PHONY: help dev docker-* clean test-* deploy-help deploy-build deploy-dev deploy-qa deploy-prod deploy-stop deploy-clean
 
 # Default target
 help:
@@ -21,6 +21,7 @@ help:
 	@echo "${GREEN}make docker-shell-be${NC}    - Open shell in backend container"
 	@echo "${GREEN}make clean${NC}              - Clean all build artifacts"
 	@echo "${GREEN}make test${NC}               - Run all tests"
+	@echo "${GREEN}make deploy-help${NC}         - Show deployment commands"
 
 # Development mode
 dev: docker-up
@@ -105,3 +106,69 @@ watch-fe:
 watch-be:
 	@echo "${YELLOW}Watching backend changes...${NC}"
 	$(DOCKER_COMPOSE) logs -f backend
+
+# ===========================================
+# Deployment Commands
+# ===========================================
+
+# Variables for deployment
+APP_NAME = todo-app
+DEPLOY_PORT = 8080
+
+# Deploy help
+deploy-help:
+	@echo "${CYAN}Deployment commands:${NC}"
+	@echo "${GREEN}make deploy-build${NC}        - Build Docker image for deployment"
+	@echo "${GREEN}make deploy-dev${NC}          - Deploy in development mode"
+	@echo "${GREEN}make deploy-qa${NC}           - Deploy in QA mode"
+	@echo "${GREEN}make deploy-prod${NC}         - Deploy in production mode"
+	@echo "${GREEN}make deploy-stop${NC}         - Stop deployment containers"
+	@echo "${GREEN}make deploy-clean${NC}        - Clean deployment artifacts"
+
+# Build the Docker image
+deploy-build:
+	@echo "${YELLOW}Building deployment Docker image...${NC}"
+	docker build -t $(APP_NAME) .
+
+# Deploy with different profiles
+deploy-dev:
+	@echo "${YELLOW}Deploying in development mode...${NC}"
+	docker run --rm -d -p $(DEPLOY_PORT):$(DEPLOY_PORT) \
+		-e "SPRING_PROFILES_ACTIVE=default" \
+		--name $(APP_NAME)-dev \
+		$(APP_NAME)
+	@echo "${GREEN}Development deployment running on port ${DEPLOY_PORT}${NC}"
+
+deploy-qa:
+	@echo "${YELLOW}Deploying in QA mode...${NC}"
+	docker run --rm -d -p $(DEPLOY_PORT):$(DEPLOY_PORT) \
+		-e "SPRING_PROFILES_ACTIVE=qa" \
+		-e "QA_DB_USERNAME=${QA_DB_USERNAME}" \
+		-e "QA_DB_PASSWORD=${QA_DB_PASSWORD}" \
+		--name $(APP_NAME)-qa \
+		$(APP_NAME)
+	@echo "${GREEN}QA deployment running on port ${DEPLOY_PORT}${NC}"
+
+deploy-prod:
+	@echo "${YELLOW}Deploying in production mode...${NC}"
+	docker run --rm -d -p $(DEPLOY_PORT):$(DEPLOY_PORT) \
+		-e "SPRING_PROFILES_ACTIVE=prod" \
+		-e "PROD_DB_USERNAME=${PROD_DB_USERNAME}" \
+		-e "PROD_DB_PASSWORD=${PROD_DB_PASSWORD}" \
+		--name $(APP_NAME)-prod \
+		$(APP_NAME)
+	@echo "${GREEN}Production deployment running on port ${DEPLOY_PORT}${NC}"
+
+# Stop deployment containers
+deploy-stop:
+	@echo "${YELLOW}Stopping deployment containers...${NC}"
+	docker stop $(APP_NAME)-dev || true
+	docker stop $(APP_NAME)-qa || true
+	docker stop $(APP_NAME)-prod || true
+	@echo "${GREEN}Deployment containers stopped${NC}"
+
+# Clean deployment artifacts
+deploy-clean: deploy-stop
+	@echo "${YELLOW}Cleaning deployment artifacts...${NC}"
+	docker rmi $(APP_NAME) || true
+	@echo "${GREEN}Deployment artifacts cleaned${NC}"
