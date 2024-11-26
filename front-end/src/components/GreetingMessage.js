@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from "axios";
-import '../components/Saudacao.css';
+import api from "../api/axios";
+import './Saudacao.css';
 
 const GreetingMessage = () => {
     const [message, setMessage] = useState("")
@@ -9,7 +9,7 @@ const GreetingMessage = () => {
 
     const fetchMessage = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/saudacao");
+            const response = await api.get("/saudacao");
             setMessage(response.data);
         } catch (error) {
             console.error("Erro na busca da mensagem:", error);
@@ -24,7 +24,7 @@ const GreetingMessage = () => {
 
   return (
     <div className='saudacao-container'>
-        <h1>SAUDAÇÃO</h1>
+        <h1>TODO APP</h1>
         {erro ? (
             <p>Erro na busca da mensagem.</p>
         ) : (
