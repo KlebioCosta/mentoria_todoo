@@ -1,0 +1,15 @@
+# Diretórios de build do Maven
+target/
+
+.idea/
+*.iml
+
+
+.settings/
+
+nbproject/
+
+.DS_Store
+Thumbs.db
+
+.env
